@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArBETrage.AI - Real-Time Sports Arbitrage Detection</title>
+    <meta name="description" content="Professional sports arbitrage detection with real-time odds from multiple sportsbooks. Find guaranteed profit opportunities instantly.">
+    <meta name="keywords" content="sports arbitrage, betting calculator, odds comparison, surebet, guaranteed profit">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="assets/css/styles.css">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="assets/js/realOddsService.js" as="script">
+    <link rel="preload" href="assets/js/arbitrageDetector.js" as="script">
+    <link rel="preload" href="assets/js/config.js" as="script">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>ArBETrage<span class="logo-accent">.AI</span></h1>
+                    <div class="logo-tagline">Real-Time Arbitrage Detection</div>
+                </div>
+                
+                <div class="header-status" id="connectionStatus">
+                    <div class="status-indicator demo" id="statusIndicator">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Demo Mode</span>
+                    </div>
+                    
+                    <div class="api-usage" id="apiUsage" style="display: none;">
+                        <span class="usage-text">API: <span id="usageCount">0</span>/<span id="usageLimit">500</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            
+            <!-- Hero Section -->
+            <section class="hero">
+                <div class="hero-content">
+                    <h2 class="hero-title">Find <span class="highlight">Guaranteed Profits</span> in Sports Betting</h2>
+                    <p class="hero-description">
+                        Advanced AI-powered arbitrage detection across multiple sportsbooks. 
+                        <strong>Real-time odds analysis</strong> finds risk-free profit opportunities.
+                    </p>
+                    
+                    <div class="hero-features">
+                        <div class="feature-item">
+                            <span class="feature-icon">🔴</span>
+                            <span class="feature-text">Live Odds Data</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">⚡</span>
+                            <span class="feature-text">Instant Detection</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">💰</span>
+                            <span class="feature-text">Guaranteed Returns</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📊</span>
+                            <span class="feature-text">Professional Tools</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Workflow Container -->
+            <div class="workflow-container">
+                
+                <!-- API Configuration Card (Inserted dynamically) -->
+                <!-- This will be added by JavaScript if needed -->
+                
+                <!-- Step 1: Market Scanner -->
+                <div class="step-card active" id="step1">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Market Scanner</div>
+                    </div>
+                    <div class="step-description">
+                        Scan live sportsbooks for arbitrage opportunities across multiple markets
+                    </div>
+                    
+                    <div class="scanner-controls">
+                        <div class="scan-options">
+                            <div class="option-group">
+                                <label class="option-label">Sports Selection</label>
+                                <div class="sport-filters" id="sportFilters">
+                                    <label class="filter-checkbox">
+                                        <input type="checkbox" value="basketball_nba" checked>
+                                        <span class="checkmark"></span>
+                                        NBA Basketball
+                                    </label>
+                                    <label class="filter-checkbox">
+                                        <input type="checkbox" value="americanfootball_nfl" checked>
+                                        <span class="checkmark"></span>
+                                        NFL Football
+                                    </label>
+                                    <label class="filter-checkbox">
+                                        <input type="checkbox" value="soccer_epl">
+                                        <span class="checkmark"></span>
+                                        Premier League
+                                    </label>
+                                    <label class="filter-checkbox">
+                                        <input type="checkbox" value="baseball_mlb">
+                                        <span class="checkmark"></span>
+                                        MLB Baseball
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="option-group">
+                                <label class="option-label">Minimum Margin</label>
+                                <select id="minMarginSelect" class="select-field">
+                                    <option value="0.1">0.1% (All Opportunities)</option>
+                                    <option value="0.5" selected>0.5% (Quality Filter)</option>
+                                    <option value="1.0">1.0% (High Quality)</option>
+                                    <option value="2.0">2.0% (Premium Only)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="scan-action">
+                            <button class="action-button" id="scanArbitrageButton">
+                                <div class="action-icon">🔍</div>
+                                <div class="action-text">Scan for Arbitrage</div>
+                                <div class="action-subtitle">Live odds analysis</div>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Scan Results -->
+                    <div class="scan-results" id="scanResults" style="display: none;">
+                        <!-- Results will be populated dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Step 2: Opportunity Analysis -->
+                <div class="step-card" id="step2">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Opportunity Analysis</div>
+                    </div>
+                    <div class="step-description">
+                        Detailed analysis of selected arbitrage opportunity with real-time data
+                    </div>
+                    
+                    <div class="analysis-content" id="analysisContent">
+                        <div class="no-selection">
+                            <div class="no-selection-icon">📊</div>
+                            <div class="no-selection-text">Select an opportunity from the scan results to view detailed analysis</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Stake Calculator -->
+                <div class="step-card" id="step3">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Stake Calculator</div>
+                    </div>
+                    <div class="step-description">
+                        Calculate optimal stake distribution for guaranteed profit
+                    </div>
+                    
+                    <div class="calculator-content" id="calculatorContent">
+                        <div class="calculator-form">
+                            <div class="input-group">
+                                <label class="input-label">Total Bankroll ($)</label>
+                                <input type="number" id="bankrollInput" class="input-field" placeholder="1000" min="1" step="1">
+                                <small class="input-help">Amount you want to invest across all bets</small>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label class="input-label">Kelly Fraction (%)</label>
+                                <input type="range" id="kellySlider" class="slider" min="25" max="100" value="100" step="25">
+                                <div class="slider-labels">
+                                    <span>25% (Conservative)</span>
+                                    <span>50% (Moderate)</span>
+                                    <span>75% (Aggressive)</span>
+                                    <span>100% (Maximum)</span>
+                                </div>
+                                <small class="input-help">Risk management: lower values are more conservative</small>
+                            </div>
+                            
+                            <button class="button-primary" id="calculateStakesButton">
+                                Calculate Optimal Stakes
+                            </button>
+                        </div>
+                        
+                        <div class="calculation-results" id="calculationResults" style="display: none;">
+                            <!-- Results will be populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 4: Execution Guide -->
+                <div class="step-card" id="step4">
+                    <div class="step-header">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Execution Guide</div>
+                    </div>
+                    <div class="step-description">
+                        Step-by-step execution instructions for your arbitrage opportunity
+                    </div>
+                    
+                    <div class="execution-content" id="executionContent">
+                        <div class="execution-timeline">
+                            <!-- Timeline will be populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>ArBETrage.AI</h4>
+                    <p>Professional arbitrage detection with real-time market analysis.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Features</h4>
+                    <ul>
+                        <li>Live Odds Integration</li>
+                        <li>Real-Time Scanning</li>
+                        <li>Risk Management</li>
+                        <li>Professional Tools</li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Data Sources</h4>
+                    <ul>
+                        <li>The Odds API</li>
+                        <li>Multiple Sportsbooks</li>
+                        <li>Live Market Feeds</li>
+                        <li>Professional Grade Data</li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Legal Notice</h4>
+                    <p><small>
+                        For educational purposes. Check local gambling laws. 
+                        Sportsbooks may limit accounts that consistently exploit arbitrage opportunities.
+                        Past performance does not guarantee future results.
+                    </small></p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 ArBETrage.AI. Educational tool for arbitrage analysis.</p>
+                <div class="footer-links">
+                    <a href="#privacy">Privacy Policy</a>
+                    <a href="#terms">Terms of Use</a>
+                    <a href="#contact">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Feedback Messages Container -->
+    <div id="feedbackContainer"></div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Processing live odds data...</div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/realOddsService.js"></script>
+    <script src="assets/js/arbitrageDetector.js"></script>
+    <script src="assets/js/app.js"></script>
+    
+    <!-- Analytics (Optional) -->
+    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script> -->
+    
+    <script>
+        // Initialize app when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for API key in environment
+            const urlParams = new URLSearchParams(window.location.search);
+            const debugMode = urlParams.get('debug') === 'true';
+            
+            if (debugMode) {
+                console.log('🐛 Debug mode enabled');
+                document.body.classList.add('debug-mode');
+            }
+            
+            // Initialize connection status
+            updateConnectionStatus('demo');
+            
+            console.log('🎯 ArBETrage.AI loaded and ready for action!');
+        });
+        
+        // Update connection status in header
+        function updateConnectionStatus(mode) {
+            const indicator = document.getElementById('statusIndicator');
+            const usageDiv = document.getElementById('apiUsage');
+            
+            if (mode === 'live') {
+                indicator.className = 'status-indicator live';
+                indicator.innerHTML = '<span class="status-dot"></span><span class="status-text">Live Data</span>';
+                usageDiv.style.display = 'block';
+            } else {
+                indicator.className = 'status-indicator demo';
+                indicator.innerHTML = '<span class="status-dot"></span><span class="status-text">Demo Mode</span>';
+                usageDiv.style.display = 'none';
+            }
+        }
+        
+        // Update API usage display
+        function updateApiUsage(used, total) {
+            document.getElementById('usageCount').textContent = used;
+            document.getElementById('usageLimit').textContent = total;
+        }
+    </script>
+</body>
+</html>

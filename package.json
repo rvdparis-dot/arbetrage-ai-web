@@ -1,0 +1,35 @@
+{
+  "name": "arbitrage-ai",
+  "version": "2.0.0",
+  "description": "ArBETrage.AI - Real-time sports arbitrage detection and calculation tool",
+  "main": "index.html",
+  "scripts": {
+    "start": "npm run serve",
+    "serve": "npx http-server -p 8080 -c-1",
+    "dev": "npm run serve",
+    "test": "node tests/run-tests.js",
+    "test-api": "node tests/api-test.js",
+    "build": "npm run minify",
+    "minify": "terser assets/js/app.js -o assets/js/app.min.js --source-map",
+    "deploy": "npm run build && npm run upload",
+    "lint": "eslint assets/js/*.js",
+    "validate-env": "node scripts/validate-env.js",
+    "setup-env": "node scripts/setup-env.js"
+  },
+  "keywords": [
+    "arbitrage",
+    "sports-betting",
+    "odds-comparison",
+    "real-time-data",
+    "sportsbook",
+    "betting-calculator",
+    "profit-guarantee"
+  ],
+  "author": "ArBETrage.AI Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/arbitrage-ai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username
