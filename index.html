@@ -289,9 +289,31 @@
     <!-- Analytics (Optional) -->
     <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script> -->
     
+   <!-- Scripts -->
+    <script src="assets/js/simple-app.js"></script>
+    
     <script>
-
-<script src="assets/js/simple-app.js"></script>
+        // Initialize app when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 HTML initialization running...');
+            
+            // Force live mode status
+            setTimeout(function() {
+                const indicator = document.getElementById('statusIndicator');
+                if (indicator) {
+                    indicator.className = 'status-indicator live';
+                    indicator.innerHTML = '<span class="status-dot"></span><span class="status-text">Live Data</span>';
+                }
+                
+                const apiUsage = document.getElementById('apiUsage');
+                if (apiUsage) {
+                    apiUsage.style.display = 'block';
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>
     
 <!-- ... rest of your scripts -->
         // Initialize app when DOM is ready
