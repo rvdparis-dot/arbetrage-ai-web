@@ -1,7 +1,7 @@
-// ArBETrage.AI - Super Simple Version
+// ArBETrage.AI - Super Simple Version (USE THIS ONE)
 console.log('Starting ArBETrage.AI...');
 
-// Configuration
+// Configuration  
 const API_KEY = '18630d83221a5627442cd047a67f1cec';
 let isLiveMode = false;
 
@@ -50,7 +50,7 @@ function initializeApp() {
     
     // Show success message
     setTimeout(function() {
-        showMessage('✅ LIVE MODE ACTIVATED! Real sportsbook data connected.');
+        showMessage('LIVE MODE ACTIVATED! Real sportsbook data connected.');
     }, 500);
     
     console.log('App initialized successfully!');
@@ -75,7 +75,7 @@ async function startScan() {
         if (icon) icon.innerHTML = '🔄';
         button.disabled = true;
         
-        showMessage('🔍 Scanning for arbitrage opportunities...');
+        showMessage('Scanning for arbitrage opportunities...');
         
         // Simulate scan delay
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -104,11 +104,11 @@ async function startScan() {
         
         // Display results
         displayResults(opportunities);
-        showMessage('✅ Found ' + opportunities.length + ' arbitrage opportunities!');
+        showMessage('Found ' + opportunities.length + ' arbitrage opportunities!');
         
     } catch (error) {
         console.error('Scan error:', error);
-        showMessage('❌ Scan failed');
+        showMessage('Scan failed');
     } finally {
         // Restore button
         if (text) text.textContent = originalText;
@@ -175,4 +175,4 @@ function showMessage(text) {
     }, 4000);
 }
 
-console.log('✅ ArBETrage.AI script loaded successfully');
+console.log('ArBETrage.AI script loaded successfully');
