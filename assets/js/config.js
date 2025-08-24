@@ -22,6 +22,17 @@ class ConfigManager {
                 retryAttempts: 3,
                 retryDelay: 1000
             },
+
+            // Add this to the loadConfiguration() method in config.js
+loadFromBrowser() {
+    if (typeof window !== 'undefined' && window.ArbitrageConfig) {
+        this.config.api.oddsApiKey = window.ArbitrageConfig.ODDS_API_KEY;
+        this.config.api.baseUrl = window.ArbitrageConfig.ODDS_API_BASE_URL;
+        this.config.api.rateLimit = window.ArbitrageConfig.ODDS_API_RATE_LIMIT;
+        // ... other config
+        console.log('🌐 Browser configuration loaded');
+    }
+}
             
             // Supported sports and markets
             sports: {
