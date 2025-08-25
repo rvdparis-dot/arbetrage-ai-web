@@ -255,9 +255,16 @@ function createOpportunityCard(opp) {
     `;
     
     return card;
-// Replace the calculateStakes function in simple-app.js with this:
+// FIND THIS FUNCTION in your simple-app.js:
+// function calculateStakes(oppId) {
+//     showMessage('🧮 Stake calculator coming soon! Opportunity ID: ' + oppId, 'info');
+// }
+
+// REPLACE IT WITH THIS COMPLETE FUNCTION:
 
 function calculateStakes(oppId) {
+    console.log('🧮 Calculate stakes called for opportunity:', oppId);
+    
     // Get the opportunity data
     const opportunities = generateLiveOpportunities();
     const opportunity = opportunities.find(opp => opp.id === oppId);
@@ -267,8 +274,302 @@ function calculateStakes(oppId) {
         return;
     }
     
-    // Show stake calculator modal/popup
-    showStakeCalculator(opportunity);
+    console.log('Found opportunity:', opportunity);
+    
+    // Create and show calculator modal
+    showStakeCalculatorModal(opportunity);
+}
+
+function showStakeCalculatorModal(opportunity) {
+    console.log('Showing calculator modal for:', opportunity.matchup);
+    
+    // Remove existing modal if present
+    const existingModal = document.querySelector('.stake-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Create modal overlay
+    const modal = document.createElement('div');
+    modal.className = 'stake-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        padding: 20px;
+        box-sizing: border-box;
+    `;
+    
+    // Create modal content
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        max-width: 700px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        position: relative;
+    `;
+    
+    modalContent.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <h2 style="margin: 0; color: #111827; font-size: 24px;">🧮 Stake Calculator</h2>
+            <button onclick="closeStakeModal()" style="
+                background: none;
+                border: none;
+                font-size: 28px;
+                cursor: pointer;
+                color: #6b7280;
+                padding: 5px;
+                line-height: 1;
+            ">×</button>
+        </div>
+        
+        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+            <h3 style="margin: 0 0 12px 0; color: #1f2937; font-size: 18px;">${opportunity.matchup}</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; font-size: 14px;">
+                <div><strong>Sport:</strong> ${opportunity.sport}</div>
+                <div><strong>Game Time:</strong> ${opportunity.gameTime}</div>
+                <div><strong>Margin:</strong> <span style="color: #10b981; font-weight: bold;">${opportunity.margin.toFixed(2)}%</span></div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 25px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 16px;">
+                💰 Total Investment ($)
+            </label>
+            <input type="number" id="modalBankrollInput" value="1000" min="1" max="1000000" step="1" style="
+                width: 100%;
+                padding: 14px;
+                border: 2px solid #e5e7eb;
+                border-radius: 10px;
+                font-size: 18px;
+                box-sizing: border-box;
+                font-weight: 500;
+            " oninput="updateStakeCalculation(${opportunity.id})">
+            <small style="color: #6b7280; font-size: 14px;">Amount you want to invest across all bets</small>
+        </div>
+        
+        <div id="stakeCalculationResults">
+            <!-- Results will be inserted here -->
+        </div>
+    `;
+    
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+    
+    // Close on background click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeStakeModal();
+        }
+    });
+    
+    // Calculate initial results
+    setTimeout(() => updateStakeCalculation(opportunity.id), 100);
+    
+    console.log('✅ Calculator modal displayed');
+}
+
+function updateStakeCalculation(oppId) {
+    const bankrollInput = document.getElementById('modalBankrollInput');
+    const resultsDiv = document.getElementById('stakeCalculationResults');
+    
+    if (!bankrollInput || !resultsDiv) return;
+    
+    const bankroll = parseFloat(bankrollInput.value) || 1000;
+    const opportunities = generateLiveOpportunities();
+    const opportunity = opportunities.find(opp => opp.id === oppId);
+    
+    if (!opportunity || bankroll <= 0) {
+        resultsDiv.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Please enter a valid investment amount.</p>';
+        return;
+    }
+    
+    // Calculate arbitrage stakes
+    const stakes = [];
+    let totalImpliedProb = 0;
+    
+    // Calculate total implied probability
+    opportunity.outcomes.forEach(outcome => {
+        totalImpliedProb += (1 / outcome.decimal);
+    });
+    
+    // Calculate individual stakes
+    opportunity.outcomes.forEach(outcome => {
+        const impliedProb = 1 / outcome.decimal;
+        const stake = (bankroll * impliedProb) / totalImpliedProb;
+        const potentialReturn = stake * outcome.decimal;
+        
+        stakes.push({
+            team: outcome.team,
+            odds: outcome.odds,
+            sportsbook: outcome.sportsbook,
+            stake: stake,
+            potentialReturn: potentialReturn,
+            decimal: outcome.decimal
+        });
+    });
+    
+    // Calculate guaranteed profit
+    const guaranteedProfit = stakes[0].potentialReturn - bankroll;
+    const profitPercentage = (guaranteedProfit / bankroll) * 100;
+    
+    // Display results
+    let resultsHTML = `
+        <div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border: 3px solid #10b981; border-radius: 16px; padding: 25px; margin-bottom: 25px; text-align: center;">
+            <h3 style="margin: 0 0 8px 0; color: #166534; font-size: 28px; font-weight: 800;">
+                🎯 Guaranteed Profit: $${guaranteedProfit.toFixed(2)}
+            </h3>
+            <p style="margin: 0; color: #166534; font-size: 18px; font-weight: 600;">
+                ${profitPercentage.toFixed(2)}% return on your $${bankroll.toFixed(2)} investment
+            </p>
+            <p style="margin: 8px 0 0 0; color: #059669; font-size: 14px;">
+                You profit this amount no matter which team wins!
+            </p>
+        </div>
+        
+        <h4 style="margin: 0 0 20px 0; color: #1f2937; font-size: 20px;">📊 Optimal Bet Distribution:</h4>
+    `;
+    
+    stakes.forEach((stake, index) => {
+        resultsHTML += `
+            <div style="
+                background: white;
+                border: 3px solid #e5e7eb;
+                border-radius: 16px;
+                padding: 25px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            ">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h4 style="margin: 0; color: #1f2937; font-size: 20px;">${stake.team}</h4>
+                    <span style="background: #dbeafe; color: #1d4ed8; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                        ${stake.sportsbook}
+                    </span>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="text-align: center;">
+                        <div style="color: #6b7280; font-size: 14px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Bet Amount</div>
+                        <div style="font-size: 32px; font-weight: 800; color: #10b981; line-height: 1;">$${stake.stake.toFixed(2)}</div>
+                        <div style="color: #6b7280; font-size: 14px; margin-top: 4px;">at ${stake.odds}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #6b7280; font-size: 14px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">If This Wins</div>
+                        <div style="font-size: 32px; font-weight: 800; color: #1f2937; line-height: 1;">$${stake.potentialReturn.toFixed(2)}</div>
+                        <div style="color: #10b981; font-size: 14px; margin-top: 4px; font-weight: 600;">= $${guaranteedProfit.toFixed(2)} profit</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    resultsHTML += `
+        <div style="background: #f1f5f9; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+            <h4 style="margin: 0 0 15px 0; color: #334155; font-size: 18px;">📋 Execution Steps:</h4>
+            <ol style="margin: 0; padding-left: 20px; color: #475569; font-size: 15px; line-height: 1.6;">
+                <li><strong>Act quickly</strong> - odds can change rapidly</li>
+                <li><strong>Place each bet</strong> at the specified sportsbook with exact amounts</li>
+                <li><strong>Double-check</strong> odds haven't changed before confirming</li>
+                <li><strong>Collect profit</strong> - you'll win $${guaranteedProfit.toFixed(2)} regardless of outcome!</li>
+            </ol>
+        </div>
+        
+        <div style="display: flex; gap: 15px;">
+            <button onclick="closeStakeModal()" style="
+                flex: 1;
+                background: #6b7280;
+                color: white;
+                border: none;
+                padding: 16px 24px;
+                border-radius: 12px;
+                font-weight: 600;
+                font-size: 16px;
+                cursor: pointer;
+            ">Close Calculator</button>
+            
+            <button onclick="copyStakeDetails(${oppId})" style="
+                flex: 1;
+                background: #10b981;
+                color: white;
+                border: none;
+                padding: 16px 24px;
+                border-radius: 12px;
+                font-weight: 600;
+                font-size: 16px;
+                cursor: pointer;
+            ">📋 Copy Details</button>
+        </div>
+    `;
+    
+    resultsDiv.innerHTML = resultsHTML;
+    
+    console.log('✅ Stake calculation updated');
+}
+
+function closeStakeModal() {
+    const modal = document.querySelector('.stake-modal');
+    if (modal) {
+        modal.remove();
+        console.log('✅ Calculator modal closed');
+    }
+}
+
+function copyStakeDetails(oppId) {
+    const bankroll = parseFloat(document.getElementById('modalBankrollInput').value) || 1000;
+    const opportunities = generateLiveOpportunities();
+    const opportunity = opportunities.find(opp => opp.id === oppId);
+    
+    if (!opportunity) return;
+    
+    // Build copy text
+    let copyText = `🎯 ArBETrage.AI Stake Calculation\n`;
+    copyText += `═══════════════════════════════════\n`;
+    copyText += `Game: ${opportunity.matchup}\n`;
+    copyText += `Sport: ${opportunity.sport}\n`;
+    copyText += `Game Time: ${opportunity.gameTime}\n`;
+    copyText += `Arbitrage Margin: ${opportunity.margin.toFixed(2)}%\n`;
+    copyText += `Total Investment: $${bankroll.toFixed(2)}\n\n`;
+    
+    copyText += `BET DISTRIBUTION:\n`;
+    copyText += `─────────────────\n`;
+    
+    // Calculate stakes for copy
+    let totalImpliedProb = 0;
+    opportunity.outcomes.forEach(outcome => {
+        totalImpliedProb += (1 / outcome.decimal);
+    });
+    
+    const guaranteedProfit = (bankroll / totalImpliedProb) - bankroll;
+    
+    opportunity.outcomes.forEach(outcome => {
+        const impliedProb = 1 / outcome.decimal;
+        const stake = (bankroll * impliedProb) / totalImpliedProb;
+        
+        copyText += `${outcome.team}: $${stake.toFixed(2)} @ ${outcome.odds} (${outcome.sportsbook})\n`;
+    });
+    
+    copyText += `\nGUARANTEED PROFIT: $${guaranteedProfit.toFixed(2)}\n`;
+    copyText += `PROFIT PERCENTAGE: ${((guaranteedProfit/bankroll)*100).toFixed(2)}%\n\n`;
+    copyText += `Generated by ArBETrage.AI - https://rvdparis-dot.github.io/arbetrage-ai-web/`;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(copyText).then(() => {
+        showMessage('📋 Stake details copied to clipboard!', 'success');
+    }).catch(() => {
+        showMessage('❌ Failed to copy to clipboard', 'error');
+    });
 }
 
 function showStakeCalculator(opportunity) {
