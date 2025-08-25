@@ -378,6 +378,8 @@ function showStakeCalculatorModal(opportunity) {
     console.log('✅ Calculator modal displayed');
 }
 
+// FIND this function in your simple-app.js and REPLACE it:
+
 function updateStakeCalculation(oppId) {
     const bankrollInput = document.getElementById('modalBankrollInput');
     const resultsDiv = document.getElementById('stakeCalculationResults');
@@ -393,7 +395,7 @@ function updateStakeCalculation(oppId) {
         return;
     }
     
-    // Calculate arbitrage stakes
+    // FIXED ARBITRAGE MATH
     const stakes = [];
     let totalImpliedProb = 0;
     
@@ -401,6 +403,14 @@ function updateStakeCalculation(oppId) {
     opportunity.outcomes.forEach(outcome => {
         totalImpliedProb += (1 / outcome.decimal);
     });
+    
+    console.log('Total implied probability:', totalImpliedProb.toFixed(4));
+    
+    // Check if this is actually an arbitrage opportunity
+    if (totalImpliedProb >= 1.0) {
+        resultsDiv.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">No arbitrage opportunity - total implied probability is ' + (totalImpliedProb * 100).toFixed(2) + '%</p>';
+        return;
+    }
     
     // Calculate individual stakes
     opportunity.outcomes.forEach(outcome => {
@@ -418,9 +428,15 @@ function updateStakeCalculation(oppId) {
         });
     });
     
-    // Calculate guaranteed profit
-    const guaranteedProfit = stakes[0].potentialReturn - bankroll;
+    // CORRECTED PROFIT CALCULATION
+    // The guaranteed return is what you get back regardless of outcome
+    const guaranteedReturn = stakes[0].potentialReturn; // Same for all stakes in true arbitrage
+    const guaranteedProfit = guaranteedReturn - bankroll;
     const profitPercentage = (guaranteedProfit / bankroll) * 100;
+    
+    console.log('Bankroll:', bankroll);
+    console.log('Guaranteed return:', guaranteedReturn.toFixed(2));
+    console.log('Guaranteed profit:', guaranteedProfit.toFixed(2));
     
     // Display results
     let resultsHTML = `
@@ -512,7 +528,8 @@ function updateStakeCalculation(oppId) {
     
     resultsDiv.innerHTML = resultsHTML;
     
-    console.log('✅ Stake calculation updated');
+    console.log('✅ Stake calculation updated with correct math');
+
 }
 
 function closeStakeModal() {
