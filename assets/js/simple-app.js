@@ -312,3 +312,250 @@ function showSuccessMessage() {
 }
 
 console.log('✅ ArBETrage.AI Simple Version Loaded Successfully!');
+
+// Add these functions to your simple-app.js file (at the bottom)
+
+// Fix the existing calculator interface
+document.addEventListener('DOMContentLoaded', function() {
+    // ... your existing code ...
+    
+    // Setup calculator button after DOM loads
+    setTimeout(function() {
+        setupCalculatorInterface();
+    }, 1000);
+});
+
+function setupCalculatorInterface() {
+    // Find the calculator button
+    const calculateButton = document.getElementById('calculateStakesButton') || 
+                           document.querySelector('[onclick*="calculate"]') ||
+                           document.querySelector('button:contains("Calculate Optimal Stakes")');
+    
+    if (calculateButton) {
+        // Remove any existing onclick handlers
+        calculateButton.onclick = null;
+        calculateButton.removeAttribute('onclick');
+        
+        // Add our working handler
+        calculateButton.addEventListener('click', function() {
+            console.log('Calculate button clicked');
+            performStakeCalculation();
+        });
+        
+        console.log('✅ Calculator button configured');
+    } else {
+        console.log('❌ Calculator button not found');
+        
+        // Try to find all buttons and see what we have
+        const allButtons = document.querySelectorAll('button');
+        console.log('Found buttons:', allButtons.length);
+        allButtons.forEach((btn, i) => {
+            console.log(`Button ${i}:`, btn.textContent?.trim());
+        });
+    }
+}
+
+function performStakeCalculation() {
+    console.log('🧮 Starting stake calculation...');
+    
+    // Get input values
+    const bankrollInput = document.getElementById('bankrollInput');
+    const kellySlider = document.getElementById('kellySlider');
+    
+    let bankroll = 1000; // default
+    let kellyFraction = 100; // default
+    
+    if (bankrollInput) {
+        bankroll = parseFloat(bankrollInput.value) || 1000;
+        console.log('Bankroll from input:', bankroll);
+    } else {
+        console.log('Bankroll input not found, using default:', bankroll);
+    }
+    
+    if (kellySlider) {
+        kellyFraction = parseFloat(kellySlider.value) || 100;
+        console.log('Kelly fraction from slider:', kellyFraction);
+    } else {
+        console.log('Kelly slider not found, using default:', kellyFraction);
+    }
+    
+    // Get the currently selected opportunity (from scan results)
+    const selectedOpportunity = getSelectedOpportunity();
+    
+    if (!selectedOpportunity) {
+        showMessage('❌ Please scan for arbitrage opportunities first!', 'error');
+        return;
+    }
+    
+    console.log('Using opportunity:', selectedOpportunity);
+    
+    // Calculate stakes
+    const results = calculateArbitrageStakes(selectedOpportunity, bankroll, kellyFraction / 100);
+    
+    // Display results
+    displayCalculationResults(results);
+    
+    showMessage('✅ Stake calculation complete!', 'success');
+}
+
+function getSelectedOpportunity() {
+    // Try to get from the displayed opportunities
+    const opportunities = generateLiveOpportunities();
+    
+    // For now, use the first/best opportunity
+    if (opportunities && opportunities.length > 0) {
+        return opportunities[0]; // Use the best opportunity (highest margin)
+    }
+    
+    return null;
+}
+
+function calculateArbitrageStakes(opportunity, bankroll, kellyFraction) {
+    console.log('Calculating stakes for:', opportunity.matchup, 'Bankroll:', bankroll, 'Kelly:', kellyFraction);
+    
+    // Calculate total implied probability
+    let totalImpliedProb = 0;
+    opportunity.outcomes.forEach(outcome => {
+        totalImpliedProb += 1 / outcome.decimal;
+    });
+    
+    console.log('Total implied probability:', totalImpliedProb);
+    
+    // Calculate individual stakes
+    const stakes = [];
+    let totalStakeAmount = 0;
+    
+    opportunity.outcomes.forEach(outcome => {
+        const impliedProb = 1 / outcome.decimal;
+        const optimalStake = (bankroll * kellyFraction * impliedProb) / totalImpliedProb;
+        const potentialReturn = optimalStake * outcome.decimal;
+        
+        stakes.push({
+            team: outcome.team,
+            odds: outcome.odds,
+            sportsbook: outcome.sportsbook,
+            stake: optimalStake,
+            potentialReturn: potentialReturn,
+            decimal: outcome.decimal
+        });
+        
+        totalStakeAmount += optimalStake;
+    });
+    
+    // Calculate guaranteed profit
+    const guaranteedProfit = stakes[0].potentialReturn - totalStakeAmount;
+    const profitPercentage = (guaranteedProfit / totalStakeAmount) * 100;
+    
+    console.log('Guaranteed profit:', guaranteedProfit);
+    
+    return {
+        opportunity: opportunity,
+        stakes: stakes,
+        totalStakeAmount: totalStakeAmount,
+        guaranteedProfit: guaranteedProfit,
+        profitPercentage: profitPercentage,
+        kellyFraction: kellyFraction,
+        originalBankroll: bankroll
+    };
+}
+
+function displayCalculationResults(results) {
+    // Find the results container
+    let resultsContainer = document.getElementById('calculationResults') ||
+                          document.querySelector('.calculation-results') ||
+                          document.querySelector('.calculator-results');
+    
+    if (!resultsContainer) {
+        // Create results container if it doesn't exist
+        resultsContainer = document.createElement('div');
+        resultsContainer.id = 'calculationResults';
+        resultsContainer.className = 'calculation-results';
+        
+        // Try to insert after the calculator form
+        const calculatorForm = document.querySelector('.calculator-form') ||
+                             document.querySelector('#step3') ||
+                             document.querySelector('.step-card');
+        
+        if (calculatorForm) {
+            calculatorForm.appendChild(resultsContainer);
+        } else {
+            document.body.appendChild(resultsContainer);
+        }
+    }
+    
+    resultsContainer.style.display = 'block';
+    
+    // Generate results HTML
+    let resultsHTML = `
+        <div style="background: #dcfce7; border: 2px solid #10b981; border-radius: 16px; padding: 25px; margin: 20px 0;">
+            <div style="text-align: center; margin-bottom: 15px;">
+                <h3 style="margin: 0; color: #166534; font-size: 24px;">
+                    🎯 Guaranteed Profit: $${results.guaranteedProfit.toFixed(2)}
+                </h3>
+                <p style="margin: 8px 0 0 0; color: #166534; font-size: 16px;">
+                    ${results.profitPercentage.toFixed(2)}% return on $${results.totalStakeAmount.toFixed(2)} invested
+                </p>
+            </div>
+        </div>
+        
+        <div style="background: white; border-radius: 12px; padding: 20px; margin: 20px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <h3 style="margin: 0 0 20px 0; color: #1f2937;">📊 Optimal Stakes Distribution</h3>
+            <div style="margin-bottom: 15px;">
+                <strong>Game:</strong> ${results.opportunity.matchup}<br>
+                <strong>Total Investment:</strong> $${results.totalStakeAmount.toFixed(2)} 
+                <span style="color: #6b7280;">(${(results.kellyFraction * 100).toFixed(0)}% Kelly)</span>
+            </div>
+    `;
+    
+    // Add each stake
+    results.stakes.forEach((stake, index) => {
+        resultsHTML += `
+            <div style="
+                background: #f8fafc;
+                border: 2px solid #e5e7eb;
+                border-radius: 10px;
+                padding: 20px;
+                margin: 15px 0;
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 15px;
+                align-items: center;
+            ">
+                <div>
+                    <div style="font-weight: bold; color: #1f2937; margin-bottom: 5px;">${stake.team}</div>
+                    <div style="font-size: 12px; color: #6b7280;">${stake.sportsbook}</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="color: #6b7280; font-size: 12px;">BET AMOUNT</div>
+                    <div style="font-size: 20px; font-weight: bold; color: #10b981;">$${stake.stake.toFixed(2)}</div>
+                    <div style="font-size: 12px; color: #6b7280;">${stake.odds}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="color: #6b7280; font-size: 12px;">IF WINS</div>
+                    <div style="font-size: 20px; font-weight: bold; color: #1f2937;">$${stake.potentialReturn.toFixed(2)}</div>
+                    <div style="font-size: 12px; color: #10b981;">+$${results.guaranteedProfit.toFixed(2)} profit</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    resultsHTML += `
+            <div style="background: #f1f5f9; border-radius: 8px; padding: 15px; margin-top: 20px;">
+                <h4 style="margin: 0 0 10px 0; color: #334155;">📋 Execution Instructions:</h4>
+                <ol style="margin: 0; padding-left: 20px; color: #475569;">
+                    <li>Place each bet at the specified sportsbook</li>
+                    <li>Use the exact stake amounts calculated above</li>
+                    <li>Execute all bets quickly (odds can change)</li>
+                    <li>You'll profit $${results.guaranteedProfit.toFixed(2)} no matter who wins!</li>
+                </ol>
+            </div>
+        </div>
+    `;
+    
+    resultsContainer.innerHTML = resultsHTML;
+    
+    // Scroll to results
+    resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    console.log('✅ Results displayed successfully');
+}
